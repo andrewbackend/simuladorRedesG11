@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulación de Redes con Dispositivos Reales</title>
+<style>
+body { margin:0; font-family: Arial; background:#0f172a; color:white; }
+header { text-align:center; padding:20px; font-size:28px; }
+.container { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:20px; padding:20px; }
+.card { background:#1e293b; border-radius:15px; padding:15px; text-align:center; }
+canvas { background:#020617; border-radius:10px; }
+button { margin-top:10px; padding:10px; border:none; border-radius:10px; background:#38bdf8; cursor:pointer; }
+</style>
+</head>
+<body>
+<header>Tipo de Redes Informáticas (Simulación)</header>
+<center><h4>Docente (Autor): Andrew Torres Ramírez - 2026</h1></center>
+<div class="container" id="container"></div>
+
+<script>
+const redes = ["PAN","LAN","WLAN","VLAN","SAN","VPN","P2P","WAN"];
+const container = document.getElementById("container");
+
+// ICONOS (emoji como dispositivos reales)
+const iconos = {
+  pc:"💻", movil:"📱", server:"🗄️", wifi:"📡", nube:"☁️"
+};
+
+redes.forEach((red, i)=>{
+  const card = document.createElement("div");
+  card.className="card";
+  card.innerHTML=`<h3>${red}</h3>
+  <canvas id="c${i}" width="300" height="200"></canvas>
+  <button onclick="simular(${i},'${red}')">Simular</button>`;
+  container.appendChild(card);
+});
+
+function dibujarDispositivo(ctx,x,y,tipo){
+  ctx.font="20px Arial";
+  ctx.fillText(iconos[tipo],x-10,y+5);
+}
+
+function simular(i,tipo){
+  const c=document.getElementById("c"+i);
+  const ctx=c.getContext("2d");
+  let t=0;
+
+  function loop(){
+    ctx.clearRect(0,0,300,200);
+
+    let nodos=[];
+
+    if(tipo==="PAN") nodos=[{x:150,y:100,t:"movil"},{x:100,y:60,t:"movil"},{x:200,y:60,t:"movil"}];
+    if(tipo==="LAN") nodos=[{x:50,y:100,t:"pc"},{x:150,y:50,t:"pc"},{x:250,y:100,t:"pc"},{x:150,y:150,t:"server"}];
+    if(tipo==="WLAN") nodos=[{x:50,y:100,t:"pc"},{x:150,y:50,t:"movil"},{x:250,y:100,t:"movil"},{x:150,y:150,t:"wifi"}];
+    if(tipo==="VLAN") nodos=[{x:80,y:80,t:"pc"},{x:220,y:80,t:"pc"},{x:80,y:140,t:"pc"},{x:220,y:140,t:"pc"}];
+    if(tipo==="SAN") nodos=[{x:50,y:100,t:"server"},{x:150,y:100,t:"server"},{x:250,y:100,t:"server"}];
+    if(tipo==="VPN") nodos=[{x:50,y:100,t:"pc"},{x:250,y:100,t:"pc"}];
+    if(tipo==="P2P") nodos=[{x:100,y:50,t:"pc"},{x:200,y:50,t:"pc"},{x:100,y:150,t:"pc"},{x:200,y:150,t:"pc"}];
+    if(tipo==="WAN") nodos=[{x:50,y:50,t:"nube"},{x:250,y:50,t:"nube"},{x:50,y:150,t:"nube"},{x:250,y:150,t:"nube"}];
+
+    // dibujar conexiones
+    nodos.forEach((a,idx)=>{
+      nodos.forEach((b,j)=>{
+        if(j>idx && (tipo!=="PAN")){
+          ctx.beginPath();
+          ctx.moveTo(a.x,a.y);
+          ctx.lineTo(b.x,b.y);
+          ctx.strokeStyle="#334155";
+          ctx.stroke();
+        }
+      });
+    });
+
+    // dibujar dispositivos
+    nodos.forEach(n=>dibujarDispositivo(ctx,n.x,n.y,n.t));
+
+    // datos moviéndose
+    nodos.forEach((n,idx)=>{
+      let next=nodos[(idx+1)%nodos.length];
+      let x=n.x+(next.x-n.x)*(Math.sin(t)+1)/2;
+      let y=n.y+(next.y-n.y)*(Math.sin(t)+1)/2;
+      ctx.beginPath();
+      ctx.arc(x,y,4,0,Math.PI*2);
+      ctx.fillStyle="#22c55e";
+      ctx.fill();
+    });
+
+    // VPN túnel
+    if(tipo==="VPN"){
+      ctx.setLineDash([5,5]);
+      ctx.strokeStyle="#22c55e";
+      ctx.beginPath(); ctx.moveTo(50,100); ctx.lineTo(250,100); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // VLAN separación
+    if(tipo==="VLAN"){
+      ctx.strokeStyle="orange";
+      ctx.strokeRect(50,60,100,80);
+      ctx.strokeRect(150,60,100,80);
+    }
+
+    t+=0.05;
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+}
+</script>
+<footer>Curso: Informática - La unión 2026</footer>
+</body>
+</html>
